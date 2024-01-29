@@ -1,0 +1,27 @@
+{
+    "id": "3EF51A20",
+    "path": "C:/Users/stebbi39/OneDrive - Michigan State University/it_sup model/lake_trout_hierarchical_growth_model/helper/simulation_code_for_HPCC_helper.R",
+    "project_path": "helper/simulation_code_for_HPCC_helper.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1705365527079.0,
+    "source_on_save": false,
+    "relative_order": 7,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "212,29",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1705365595,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1705365595029,
+    "read_only": false,
+    "read_only_alternatives": []
+}

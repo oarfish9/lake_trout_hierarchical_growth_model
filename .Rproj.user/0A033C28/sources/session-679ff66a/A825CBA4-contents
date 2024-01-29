@@ -1,0 +1,51 @@
+# Stebbins 1-15-2024
+# this contains helper functions for running the script 
+# persistent_transient_cases.R
+
+# create age, ind_idx, pop_idx, and pop_ind_idx vectors for simulation block
+sim_block_vectors <- function(maxage, npop_sim){
+  
+  # initialize
+  nrec <- maxage * ((maxage + 1)/2)
+  nrec_sim <- (maxage * ((maxage + 1)/2)) * npop_sim
+  
+  ages <- list()
+  ind_idx_sim_1 <- list()
+  pop_idx_sim <- list()
+  
+  # age and ind_idx_sim vectors
+  for(i in 1:maxage){
+    ages[[i]] <- seq(1:i)
+    ind_idx_sim_1[[i]] <- rep(i, i)
+  }
+  ages <- unlist(ages)
+  ind_idx_sim_1 <- unlist(ind_idx_sim_1)
+  
+  age <- rep(ages, npop_sim)
+  
+  tmp <- list()
+  tmp[[1]] <- ind_idx_sim_1
+  for(i in 2:npop_sim){
+    tmp[[i]] <- rep((i-1) * maxage + ind_idx_sim_1)
+  }
+  ind_idx_sim <- unlist(tmp)-1
+  nind_sim = length(unique(ind_idx_sim))
+  
+  # now create pop_idx_sim 
+  for(i in 1:npop_sim){
+    pop_idx_sim[[i]] <- rep(i, nrec)
+  }
+  pop_idx_sim <- unlist(pop_idx_sim)
+  
+  sim_age <- data.frame(age, ind_idx_sim, pop_idx_sim)
+  
+  pop_idx_ind_sim <- unique(sim_age[c('ind_idx_sim', 'pop_idx_sim')])$pop_idx_sim - 1
+  
+  return(list("age" = age,
+              "ind_idx_sim" = ind_idx_sim,
+              "pop_idx_sim" = pop_idx_sim,
+              "pop_idx_ind_sim" = pop_idx_ind_sim,
+              "nrec_sim" = nrec_sim,
+              "nind_sim" = nind_sim))
+  
+}
