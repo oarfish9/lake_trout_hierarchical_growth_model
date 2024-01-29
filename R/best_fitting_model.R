@@ -102,9 +102,14 @@ estimates_fit <- format_output(sdr, rep, ind_level = "MVN",
                                pop_level = "BVN") |> 
   print(n = Inf)
 
-write.csv(estimates_fit, here("data", "true_estimates.csv"))
+write.csv(estimates_fit, here("data", "true_estimates.csv"), 
+          row.names = FALSE)
 obj_env_last_par <- obj$env$last.par
-save(estimates_fit, file = "true_estimates.Rdata")
+
+save(rep, file = here("data", "best_fitting_rep.Rdata"))
+save(sdr, file = here("data", "best_fitting_sdr.Rdata"))
+save(estimates_fit, file = here("data", "true_estimates.Rdata"))
+
 save(obj_env_last_par, file = here("data", "obj_env_last_par_true.Rdata"))
 
 # save parameters for use in simulation_code_for_HPCC.R
