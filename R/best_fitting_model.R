@@ -2,6 +2,10 @@
 # This takes the correlation structure identified by evaluate_alternate_models.R
 # and fits the model, saving the output
 
+# libraries
+library(tidyverse)
+library(TMB)
+
 # helper functions
 source(here("helper", "best_fitting_model_helper.R"))
 
@@ -21,6 +25,11 @@ nrec <- nrow(idat)
 nind <- length(unique(idat$idx))
 npop <- length(unique(idat$pop_idx))
 pop_idx_ind <- idat[!duplicated(idat$idx),]$pop_idx #length of nind, values of npop for indexing
+
+# create sim vectors
+maxage <- 50
+npop_sim <- 6
+sim_vectors = sim_block_vectors(maxage, npop_sim)
 
 # The data to use in the model
 data <- list(
@@ -89,7 +98,8 @@ rep <- obj$report()
 sdr <- sdreport(obj)
 
 # format output into tibble
-estimates_fit <- format_output(sdr, rep, MVN_or_BVN = "BVN") |> 
+estimates_fit <- format_output(sdr, rep, ind_level = "MVN",
+                               pop_level = "BVN") |> 
   print(n = Inf)
 
 write.csv(estimates_fit, here("data", "true_estimates.csv"))
