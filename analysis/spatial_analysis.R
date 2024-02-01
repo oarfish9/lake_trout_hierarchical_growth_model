@@ -32,7 +32,8 @@ ind_fish <- idat |>
 # residuals
 residuals = tibble("id" = idat$id,
                    "pop_id" = idat$pop_idx + 1,
-                   "residuals" = rep$resid) |> 
+                   "residuals" = rep$resid,
+                   "age" = idat$Age) |> 
   left_join(fish_ids_with_centroids |> 
               select(id, location))
 
@@ -65,13 +66,11 @@ plot_inds_with_distance |>
   scale_color_manual(values = top_palette)
 
 # plot residuals and color by population
-# are these fitted vB trajectories vs back-calculated?
+# plot the x axis as "distance between locations" ?
 
 residuals |> 
-  ggplot(aes(x = id, residuals, color = location)) + 
+  ggplot(aes(x = age, residuals, color = location)) + 
   geom_point(alpha = 0.5, size = 2) +
-  facet_wrap(~location, scales = "free") +
-  xlab("Fish ID") +
+  facet_wrap(~location, scales = "free_y") +
   ggtitle("Residuals of predicted vs. observed (back-calculated) length by population") +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+  theme(legend.position = "below")
