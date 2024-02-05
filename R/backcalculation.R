@@ -81,6 +81,15 @@ data_with_bc_lengths |>
        title = "Fraser-Lee vs. Biological Intercept BCLs")
 
 data_with_bc_lengths |> 
+  ggplot(aes(x = Age, y = Radius, 
+             group = id)) +
+  geom_line(alpha = 0.4, linewidth = 0.9, color = short_palette[1]) +
+  theme_minimal() +
+  labs(x = "Age",
+       y = "Otolith increment (mm)",
+       title = "Individual otolith growth trajectories")
+
+data_with_bc_lengths |> 
   mutate(residuals_bc_methods = bi_length - fl_length) |> 
   ggplot(aes(x = Age, y = residuals_bc_methods)) +
   geom_point(size = 2, alpha = 0.2, col =  short_palette[2]) +
@@ -101,6 +110,7 @@ data_with_bc_lengths |>
   labs(x = "Back-Calculated Length (mm)",
        title = "Back-Calculated Length Distribution for Age 1, Fraser-Lee vs. Biological Intercept") +
   theme_minimal()
+
 
 # in previous script, added Fraser-Lee back-calculated lengths to idat as
 # L_FL column and saved as 
