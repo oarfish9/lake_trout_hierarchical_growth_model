@@ -73,17 +73,24 @@ data_with_bc_lengths |>
   pivot_longer(c(bi_length, fl_length), names_to = "bc_method", values_to = "length_increment") |> 
   ggplot(aes(x = Age, y = length_increment, color = bc_method, 
              group = interaction(id, bc_method))) +
-  geom_line(alpha = 0.6) +
+  geom_line(alpha = 0.2) +
   scale_color_manual(values = short_palette) +
-  theme_minimal()
+  theme_minimal() +
+  labs(x = "Age",
+       y = "Back-calculated Lengths",
+       title = "Fraser-Lee vs. Biological Intercept BCLs")
 
 data_with_bc_lengths |> 
   mutate(residuals_bc_methods = bi_length - fl_length) |> 
   ggplot(aes(x = Age, y = residuals_bc_methods)) +
-  geom_point(size = 2, alpha = 0.2) +
+  geom_point(size = 2, alpha = 0.2, col =  short_palette[2]) +
   ylim(c(-60, 3)) +
-  geom_hline(aes(yintercept = 0))
-
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Age", 
+       y = "BI BCL - FL BCL",
+       title = "Back-Calculated Length (BCL) residuals for different methods") +
+  theme_minimal()
+  
 data_with_bc_lengths |> 
   filter(Age == 1) |> 
   pivot_longer(c(bi_length, fl_length), names_to = "bc_method", values_to = "length_increment") |> 
