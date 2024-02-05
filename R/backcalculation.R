@@ -7,80 +7,95 @@ rm(list=ls())
 library(dplyr)
 library(ggplot2)
 library(here)
-
-# define back-calculation formulas
-
-# define biological intercept model (Campana, pulled from Vigliola & Meekan 2009 )
-BI <- function(pars, dat){
-  # pars should be L0 and R0
-  L <- c()
-  for(i in 1:length(dat$Lcpt)){
-    L[i] <- dat$Lcpt[i] + ((dat$R_i[i] - dat$Rcpt[i]) * ((dat$Lcpt[i] - pars[1])/(dat$Rcpt[i] - pars[2])))
-  }
-  return(L)
-}
-
-# define Fraser-Lee back-calculation model (pulled from Vigliola & Meekan 2009)
-FL <- function(pars, dat){ # pars here is just b0
-  L_pred <- c()
-  for(i in 1:length(dat$idx1)){
-    L_pred[i] <- pars + (dat$Lcpt[i]-pars)*(dat$R_i[i]/dat$Rcpt[i])
-  }
-  return(L_pred)
-}
+library(wesanderson)
 
 
+# plot otolith v body -----------------------------------------------------
 load(here("data-raw", "incdat_2021.Rdata"))
+short_palette = c("#354823", "#D69C4E")
 
-# numbers for indexing
-nrec <- length(idat$id)
+# we don't have the individual trajectories; we can only show
+# fit of our linear model to the data
 
-# parameters - use sum of squares to figure out what Mike used
-df <- idat |> 
-  select(Lcpt = TL_mm, Rcpt = M_radius, R_i = Radius, L)
+idat |> 
+  distinct(id, TL_mm, M_radius) |> 
+  ggplot(aes(x = M_radius, y = TL_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Total otolith radius (mm)",
+       y = "Total body length (mm)",
+       title = "Total otolith radius vs. body length") +
+  theme_minimal()
 
-# define sum of squares function using biological intercept model
-# TODO fix this
-ss <- function(pars, dat){
-  L_pred <- c()
-  for (i in 1:nrec){
-    L_pred[i] <- dat$Lcpt[i] + ((dat$R_i[i] - dat$Rcpt[i]) * ((dat$Lcpt[i] - pars[1])/(dat$Rcpt[i] - pars[2])))
-  }
-  return(sum((L_pred-dat$L)^2))
+total_length_radius_linear <- lm(TL_mm ~ M_radius, data = idat)
+
+
+# define back-calculation formulas ----------------------------------------
+
+# biological intercept model Campana, pulled from Vigliola & Meekan 2009)
+# bi_pars is a vector of length 2 with parameters for the model
+calculate_biological_intercept <- function(capture_length, radius_increment, capture_radius, bi_pars) {
+  length_increment <- capture_length + ((radius_increment - capture_radius) * ((capture_length - bi_pars[1]) / (capture_radius - bi_pars[2])))
+  length_increment
+}
+
+# fl_pars is just b0
+calculate_fraser_lee <- function(capture_length, fl_par, radius_increment, radius_capture) {
+  length_increment <- fl_par + (capture_length - fl_par) * (radius_increment / radius_capture)
+  length_increment
+}
+
+# fit bi_pars using sum of squares
+bi_sum_of_squares <- function(bi_pars, data){
+  data <- data |> 
+    mutate(bi_length = calculate_biological_intercept(TL_mm, Radius, M_radius, bi_pars))
+  
+  sum_of_squares <- sum((data$bi_length - data$L)^2)
+  return(sum_of_squares)
 }
 
 # minimize sum of squared differences
-pars=c(L0=0, R0=0) # starting values
-fit <- nlminb(pars, ss, dat=df)
-fit$par
-fit$objective
+bi_starting_pars = c(L0 = 0, R0 = 0) # starting values
+bi_fit <- nlminb(bi_starting_pars, bi_sum_of_squares, data = idat)
+bi_fit$par
+bi_fit$objective
 
-# 03-22-2021 results
-# L0 = 21.6734241
-# R0 = 0.1370712
-L0p <- fit$par[1]
-R0p <- fit$par[2]
+L0p <- bi_fit$par[1]
+R0p <- bi_fit$par[2]
 
+bi_pars = c(L0 = L0p, R0 = R0p)
+fl_par = 30 #b0, from MNDNR handbook
+data_with_bc_lengths <- idat |> 
+  mutate(bi_length = calculate_biological_intercept(TL_mm, Radius, M_radius, bi_pars),
+         fl_length = calculate_fraser_lee(TL_mm, fl_par, Radius, M_radius))
 
+data_with_bc_lengths |> 
+  pivot_longer(c(bi_length, fl_length), names_to = "bc_method", values_to = "length_increment") |> 
+  ggplot(aes(x = Age, y = length_increment, color = bc_method, 
+             group = interaction(id, bc_method))) +
+  geom_line(alpha = 0.6) +
+  scale_color_manual(values = short_palette) +
+  theme_minimal()
 
-# now compare BI model to Mike's back-calculated data
-L4 <- c()
-L4 <- BI(c(L0p, R0p), df) # back-calculate lengths using R0 and L0 from Mike's data
+data_with_bc_lengths |> 
+  mutate(residuals_bc_methods = bi_length - fl_length) |> 
+  ggplot(aes(x = Age, y = residuals_bc_methods)) +
+  geom_point(size = 2, alpha = 0.2) +
+  ylim(c(-60, 3)) +
+  geom_hline(aes(yintercept = 0))
 
-plot(idat$L, L4)
-plot(idat$Age, L4)
-resid <- idat$L-L4
-hist(resid) # this looks pretty good
-summary(resid)
+data_with_bc_lengths |> 
+  filter(Age == 1) |> 
+  pivot_longer(c(bi_length, fl_length), names_to = "bc_method", values_to = "length_increment") |> 
+  mutate("Back Calculation Method" = ifelse(bc_method == "bi_length", "Biological Intercept", "Fraser-Lee")) |> 
+  ggplot(aes(x = length_increment , y = `Back Calculation Method`, fill = `Back Calculation Method`)) +
+  geom_density_ridges(scale = 1, alpha = 0.8) +
+  scale_fill_manual(values = short_palette) +
+  labs(x = "Back-Calculated Length (mm)",
+       title = "Back-Calculated Length Distribution for Age 1, Fraser-Lee vs. Biological Intercept") +
+  theme_minimal()
 
-# now add all 3 BCM to the incdat file
-rm(list=ls())
-load('incdat_2021.Rdata')
+# in previous script, added Fraser-Lee back-calculated lengths to idat as
+# L_FL column and saved as 
 
-# name the columns correctly
-df <- data.frame(idat$TL_mm, idat$M_radius, idat$Radius, idat$L, idat$idx1)
-colnames(df) <- c('Lcpt', 'Rcpt', 'R_i', 'L', 'idx1')
-pars = 30 #b0, from MNDNR handbook
-idat$L_FL <- FL(pars, df)
-plot(idat$Age, idat$L_FL)
 save(idat, file='incdat_2021-BCM1.Rdata')

@@ -74,3 +74,9 @@ residuals |>
   facet_wrap(~location, scales = "free_y") +
   ggtitle("Residuals of predicted vs. observed (back-calculated) length by population") +
   theme(legend.position = "below")
+
+residuals |> 
+  filter(residuals > -0.01 & residuals <0.01) |> 
+  ggplot(aes(x = residuals , y = location,  fill = location)) +
+  geom_density_ridges(scale = 1) +
+  ggtitle("Residuals by location")
