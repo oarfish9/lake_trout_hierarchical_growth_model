@@ -304,7 +304,7 @@ ggsave(age_40_plot, file = here("figures", "age_40_plot.png"))
 load("data/lake_superior_lat_longs.Rdata")
 load("data/nets_with_lat_longs.Rdata")
 
-lake_superior_lat_longs |> 
+lake_superior_plot <- lake_superior_lat_longs |>
   ggplot(aes(x = longitude, y = latitude, group = location)) +
   geom_polygon(fill = 'white', colour = "grey50") + 
   geom_polygon(data = lake_superior_lat_longs |> 
@@ -313,5 +313,11 @@ lake_superior_lat_longs |>
                fill = "white", color = "grey50") +
   geom_point(data = nets_with_lat_longs, 
              aes(x = longitude, y = latitude, color = location),
-             alpha = 0.2, size = 5, stroke = 1)
+             alpha = 0.6, size = 2, stroke = 1) +
+  scale_color_manual(values = top_palette, name = "Population") +
+  labs(x = "", y = "", 
+       title = "Lake Superior Sampling Locations") +
+  theme(legend.position = "bottom")
+
+ggsave(lake_superior_plot, file = here("figures", "lake_superior_plot.png"))
 

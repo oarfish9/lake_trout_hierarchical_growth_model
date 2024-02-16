@@ -8,26 +8,37 @@ library(dplyr)
 library(ggplot2)
 library(here)
 library(wesanderson)
+library(smatr) # standardized major axis regression
 
 
 # plot otolith v body -----------------------------------------------------
 load(here("data-raw", "incdat_2021.Rdata"))
 short_palette = c("#354823", "#D69C4E")
+top_palette <- c("#1B0C42FF", "#FB9A06FF", "#781C6DFF","#CF4446FF", "#4B0C6BFF", "#ED6925FF", 
+                 "#FCFFA4FF", "#000004FF", "#F7D03CFF", "#A52C60FF")
+
+backup_palette <- turbo(10)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", 
+               "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 # we don't have the individual trajectories; we can only show
 # fit of our linear model to the data
 
-idat |> 
+total_length_radius_linear <- lm(TL_mm ~ M_radius, data = idat)
+standardized_major_axis <- with(idat, line.cis(y = TL_mm, x = M_radius, method = "SMA"))
+sma(idat$TL_mm ~ idat$M_radius)
+sma_plot <- idat |> 
   distinct(id, TL_mm, M_radius) |> 
   ggplot(aes(x = M_radius, y = TL_mm)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
+  geom_point(alpha = 0.5, size = 2) +
+  geom_abline(intercept = standardized_major_axis[1, 1], slope = standardized_major_axis[2, 1],
+              linewidth = 1, color = top_palette[1]) +
   labs(x = "Total otolith radius (mm)",
        y = "Total body length (mm)",
-       title = "Total otolith radius vs. body length") +
+       title = "Total otolith radius vs. body length (Standardized Major Axis Regression)") +
   theme_minimal()
 
-total_length_radius_linear <- lm(TL_mm ~ M_radius, data = idat)
+ggsave(sma_plot, file = here("figures", "sma_plot.png"))
 
 
 # define back-calculation formulas ----------------------------------------

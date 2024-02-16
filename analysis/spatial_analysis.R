@@ -33,6 +33,7 @@ ind_fish <- idat |>
 residuals = tibble("id" = idat$id,
                    "pop_id" = idat$pop_idx + 1,
                    "residuals" = rep$resid,
+                   "log_residuals" = log(rep$L) - log(rep$L_hat),
                    "age" = idat$Age) |> 
   left_join(fish_ids_with_centroids |> 
               select(id, location))
@@ -56,24 +57,40 @@ plot_inds_with_distance |>
   ggplot(aes(x = Linf , y = location,  fill = location)) +
   geom_density_ridges(scale = 1)
 
-plot_inds_with_distance |> 
+vb_estimates_by_loc <- plot_inds_with_distance |> 
+  rename(Location = location) |> 
   pivot_longer(Linf:L1, names_to = "param", values_to = "estimate") |> 
-  ggplot(aes(x = location, y = estimate, fill = location)) +
-  geom_boxplot() +
-  facet_wrap(~param, scales = "free_y") +
+  mutate(symbols = case_when(param == "Linf" ~ "L[infinity]",
+                             param == "L1" ~ "L[1]",
+                            TRUE ~ param)) |> 
+  ggplot(aes(x = Location, y = estimate, fill = Location)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_wrap(~symbols, scales = "free_y", labeller = label_parsed) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-  scale_color_manual(values = top_palette)
+  scale_fill_manual(values = top_palette) +
+  labs(y = "Estimated parameter value",
+       title = "Distribution of von Bertalanffy parameter estimates by location")
+
+ggsave(vb_estimates_by_loc, file = here("figures", "vb_estimates_by_loc.png"))
 
 # plot residuals and color by population
 # plot the x axis as "distance between locations" ?
 
-residuals |> 
-  ggplot(aes(x = age, residuals, color = location)) + 
+log_resid_plot <- residuals |> 
+  rename(Location = location) |> 
+  ggplot(aes(x = age, log_residuals, color = Location)) + 
   geom_point(alpha = 0.5, size = 2) +
-  facet_wrap(~location, scales = "free_y") +
-  ggtitle("Residuals of predicted vs. observed (back-calculated) length by population") +
-  theme(legend.position = "below")
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ylim(c(-0.001, 0.001)) +
+  facet_wrap(~Location) +
+  theme(legend.position = "below") +
+  scale_color_manual(values = top_palette) +
+  theme_bw() +
+  labs(x = "Age", y = "Log-scale residuals (mm)",
+       title = "Log-scale residuals of predicted vs. observed (back-calculated) length by population")
+
+ggsave(log_resid_plot, file = here("figures", "log_resid_plot.png"))
 
 residuals |> 
   filter(residuals > -0.01 & residuals <0.01) |> 
