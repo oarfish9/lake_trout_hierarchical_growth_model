@@ -1,5 +1,6 @@
 # plotting process error by year
 library(tidyverse)
+library(here)
 library(ggplot2)
 
 load(here("data", "best_fitting_rep.Rdata"))
@@ -16,23 +17,26 @@ short_palette = c("#354823", "#D69C4E")
 process_error_with_year <- tibble("log_PE" = rep$log_PE,
                                   "year" = idat$Year,
                                   "id" = as.numeric(idat$id),
-                                  "pop_idx" = idat$pop_idx,
-                                  "PE" = exp(rep$log_PE))
+                                  "pop_idx" = idat$pop_idx)
 
 random_fish_sample <- as.numeric(sample(process_error_with_year$id, 25))
 
-process_error_with_year |> 
+PE_with_year_plot <- process_error_with_year |> 
   filter(id %in% random_fish_sample) |> 
-  ggplot(aes(x = year, y = PE)) +
-  geom_point() +
-  geom_hline(yintercept = 1, linetype = "dashed") +
+  mutate(fake_date = as.Date(paste0(year, "-01-01")),
+         id = paste0("Individual ", id)) |> 
+  ggplot(aes(x = fake_date, y = log_PE)) +
+  geom_point(size = 2, alpha = 0.8, color = top_palette[1]) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Year",
-       y = "Estimated Process Error",
+       y = "Estimated log process error",
        title = "Estimated Process Error by Year and Individual Fish") +
-  facet_wrap(~id, scales = "free", ncol = 5) +
+  facet_wrap(~id, ncol = 5) +
   theme(strip.background = element_blank(),
         strip.text.x = element_blank()) +
-  theme_minimal()
+  theme_bw()
+
+ggsave(PE_with_year_plot, file = here("figures", "PE_with_year_plot.png"))
 
 
 
