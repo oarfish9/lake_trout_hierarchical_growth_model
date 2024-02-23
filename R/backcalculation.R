@@ -1,7 +1,5 @@
 # back-calculation methods
 
-# TODO refactor
-
 rm(list=ls())
 # libraries
 library(dplyr)
@@ -127,3 +125,72 @@ data_with_bc_lengths |>
 # L_FL column and saved as 
 
 save(idat, file='incdat_2021-BCM1.Rdata')
+
+
+# plot back-calculated lengths vs. observed -------------------------------
+binned_BCL <- idat |> 
+  rename(age_at_capture = C_Age,
+         age = Age,
+         length_at_capture = TL_mm,
+         BCL = L) |> 
+  mutate(age_bin = case_when(age %in% 5:10 ~ "Ages 5-10",
+                             age %in% 11:15 ~ "Ages 11-15",
+                             age %in% 16:20 ~ "Ages 16-20",
+                             age %in% 21:25 ~ "Ages 21-25",
+                             age < 5 ~ "Ages 1-4",
+                             TRUE ~ "Ages 26+")) |> 
+  group_by(age_bin) |> 
+  mutate(mean_BCL_length_by_bin = mean(BCL, na.rm = T),
+         mean_length_at_capture = mean(length_at_capture, na.rm = T)) |> 
+  pivot_longer(c(mean_BCL_length_by_bin, mean_length_at_capture),
+               names_to = "mean_length_type", values_to = "mean_length") |> 
+  glimpse()
+
+age_bin_means <- binned_BCL |> 
+  filter(mean_length_type == "mean_length_at_capture",
+         age_bin != "Ages 1-4") |> 
+  mutate(`Age Bin` = factor(age_bin, levels = c("Ages 5-10", "Ages 11-15", "Ages 16-20", "Ages 21-25", "Ages 26+"))) |> 
+  distinct(`Age Bin`, mean_length)
+
+age_bin_BCL_means <- binned_BCL |> 
+  filter(mean_length_type == "mean_BCL_length_by_bin",
+         age_bin != "Ages 1-4") |> 
+  mutate(`Age Bin` = factor(age_bin, levels = c("Ages 5-10", "Ages 11-15", "Ages 16-20", "Ages 21-25", "Ages 26+"))) |> 
+  distinct(`Age Bin`, mean_length)
+
+binned_BCL |> 
+  filter(age_bin != "Ages 1-4") |> 
+  mutate(age_bin = factor(age_bin, levels = c("Ages 5-10", "Ages 11-15", "Ages 16-20", "Ages 21-25", "Ages 26+"))) |> 
+  ggplot(aes(x = BCL, y = age_bin)) + 
+  ggridges::geom_density_ridges(scale = 1, alpha = 0.5) +
+  geom_vline(data = age_bin_means, 
+             aes(xintercept = mean_length, color = age_bin),
+             linewidth = 1) +
+  scale_fill_manual(values = top_palette) +
+  scale_color_manual(values = top_palette)
+
+
+age_bin_BCL_plot <- binned_BCL |> 
+  filter(age_bin != "Ages 1-4") |> 
+  mutate(`Age Bin` = factor(age_bin, levels = c("Ages 5-10", "Ages 11-15", "Ages 16-20", "Ages 21-25", "Ages 26+"))) |> 
+  ggplot(aes(x = BCL)) + 
+  geom_density(aes(fill = `Age Bin`), alpha = 0.8) +
+  geom_vline(data = age_bin_means, 
+             aes(xintercept = mean_length), linetype = "dashed",
+             linewidth = 1) +
+  geom_vline(data = age_bin_BCL_means, 
+             aes(xintercept = mean_length), linetype = "dotted",
+             linewidth = 1) +
+  facet_wrap(~`Age Bin`) +
+  scale_fill_manual(values = top_palette) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(x = "Back-calculated length (mm)",
+       y = "Density",
+       title = "Back-calculated lengths by age bin")
+
+ggsave(age_bin_BCL_plot, file = here("figures", "age_bin_BCL_plot.png"))
+
+binned_BCL |> 
+  ggplot(aes(x = age_bin, y = length, color = type)) + 
+  geom_point()
