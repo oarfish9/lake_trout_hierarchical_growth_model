@@ -204,35 +204,35 @@ model_1 <- evaluate_alternate_models(ind_level = "MVN", pop_level = "MVN") |>
 
 model_2 <- evaluate_alternate_models(ind_level = "MVN", pop_level = "BVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 2)
 
 model_3 <- evaluate_alternate_models(ind_level = "MVN", pop_level = "UVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 3)
 
 model_4 <- evaluate_alternate_models(ind_level = "BVN", pop_level = "MVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 4)
 
 model_5 <- evaluate_alternate_models(ind_level = "BVN", pop_level = "BVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 5)
 
 model_6 <- evaluate_alternate_models(ind_level = "BVN", pop_level = "UVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 6)
 
 model_7 <- evaluate_alternate_models(ind_level = "UVN", pop_level = "MVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 7)
 
 model_8 <- evaluate_alternate_models(ind_level = "UVN", pop_level = "BVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 8)
 
 model_9 <- evaluate_alternate_models(ind_level = "UVN", pop_level = "UVN") |> 
   get_estimates() |> 
-  mutate(model = 1)
+  mutate(model = 9)
 
 all_results <- bind_rows(model_1, model_2, model_3, model_4, model_5,
                          model_6, model_7, model_8, model_9)

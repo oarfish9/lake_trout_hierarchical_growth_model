@@ -4,6 +4,7 @@
 library(viridis)
 library(tidyverse)
 library(latex2exp)
+library(here)
 
 # set palette
 top_palette <- c("#1B0C42FF", "#FB9A06FF", "#781C6DFF","#CF4446FF", "#4B0C6BFF", "#ED6925FF", 
@@ -83,7 +84,8 @@ plot_relative_errors <- function(relative_error_CIs, plot_thetas) {
                     width = 0.1, 
                     size = 0.8) +
       geom_point() + 
-      facet_wrap(~case, scales = "free", nrow = 4) + 
+      facet_wrap(~case, nrow = 4) + 
+      theme(strip.background = element_blank()) +
       theme_bw() +
       scale_x_discrete(labels = c(
         expression(K[...]),
@@ -116,7 +118,8 @@ plot_relative_errors <- function(relative_error_CIs, plot_thetas) {
                     size = 0.8) +
       geom_point() + 
       facet_wrap(~case, scales = "free", nrow = 4) + 
-      theme_bw() + 
+      theme(strip.background = element_blank()) +
+      theme_bw() +
       scale_x_discrete(labels = c(
         expression(theta[1]),
         expression(theta[2]),
@@ -127,7 +130,9 @@ plot_relative_errors <- function(relative_error_CIs, plot_thetas) {
       ggtitle("Distribution of relative error by case, correlation parameters")
   }
   p + 
-    ylab("Relative Error")
+    ylab("Relative Error") +
+    xlab("Parameter") +
+    theme(text=element_text(size=12))
 }
 
 theta_plot <- plot_relative_errors(relative_error_CIs, FALSE)
@@ -150,7 +155,8 @@ plot_relative_errors_cor <- function(relative_error_CIs, plot_cors) {
                     width = 0.1, 
                     size = 0.8) +
       geom_point() + 
-      facet_wrap(~case, scales = "free", nrow = 4) + 
+      facet_wrap(~case, nrow = 4) + 
+      theme(strip.background = element_blank()) +
       theme_bw() +
       scale_x_discrete(labels = c(
         expression(K[...]),
@@ -163,8 +169,7 @@ plot_relative_errors_cor <- function(relative_error_CIs, plot_cors) {
         expression(sigma[L[1[p]]]),
         expression(sigma[L[infinity[i]]]),
         expression(sigma[L[infinity[p]]]),
-        expression(sigma[delta]))) #+
-    #ggtitle("Distribution of relative error by case, non-correlation parameters")
+        expression(sigma[delta])))
   } else if(plot_cors == TRUE) {
     
     new_dat <- relative_error_CIs |> 
@@ -176,22 +181,22 @@ plot_relative_errors_cor <- function(relative_error_CIs, plot_cors) {
                     width = 0.1, 
                     size = 0.8) +
       geom_point() + 
-      facet_wrap(~case, scales = "free", nrow = 4) + 
-      theme_bw() + 
+      facet_wrap(~case, scales = "free_y", nrow = 4) +
       scale_x_discrete(labels = c(
         expression(L[infinity[i]]/K[i]),
         expression(L[infinity[i]]/L[1[i]]),
         expression(L[1[i]]/K[i]),
         expression(L[infinity[p]]/K[p]),
         expression(L[infinity[p]]/L[1[p]]),
-        expression(L[1[p]]/K[p]))) #+
-    #ggtitle("Distribution of relative error by case, correlation parameters")
+        expression(L[1[p]]/K[p]))) +
+      theme(strip.background = element_blank()) +
+      theme_bw()
   }
   p + 
     ylab("Relative Error") +
     xlab("Parameter") +
-    theme(axis.text.x = element_text(angle = 45, vjust = 0.9),
-          axis.text = element_text(size = 12))
+    theme(text = element_text(size = 15),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 }
 
 non_cor_plot <- plot_relative_errors_cor(relative_error_CIs, FALSE)

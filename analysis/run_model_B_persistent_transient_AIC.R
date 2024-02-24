@@ -1,6 +1,7 @@
 # run best fitting model with and without persistent and transient error
 # to add to AIC table
 
+# this is not correct - do not use
 # setup is the same -------------------------------------------------------
 
 # libraries
@@ -48,15 +49,17 @@ data <- list(
   age_sim = sim_vectors$age
 )
 
+
+# fit with no persistent error ---------------------------------------------
 # List the parameters and give starting values
-parameters <- list(
+parameters_transient <- list(
   log_sigma = log(1),
-  log_sigma_log_Linf_devs = log(30),
-  log_sigma_log_K_devs = log(0.05), # log of sd of log K deviations
-  log_sigma_log_L1_devs = log(0.05),# need a starting value
-  log_sigma_log_Linf_hyper_devs = log(30),
-  log_sigma_log_K_hyper_devs = log(0.05),
-  log_sigma_log_L1_hyper_devs = log(0.05),
+  log_sigma_log_Linf_devs = 0,
+  log_sigma_log_K_devs = 0, # log of sd of log K deviations
+  log_sigma_log_L1_devs = 0,# need a starting value
+  log_sigma_log_Linf_hyper_devs = 0,
+  log_sigma_log_K_hyper_devs = 0,
+  log_sigma_log_L1_hyper_devs = 0,
   log_Linf_hyper = log(644),
   log_K_hyper = log(0.10),
   log_L1_hyper = log(100),
@@ -74,32 +77,27 @@ parameters <- list(
   log_PE = rep(0, nrec) # vector for storing process error, no space for cases where age=0
 )
 
-
-# fit with no persistent error ---------------------------------------------
 map_par_transient <- list(
   log_sigma_log_Linf_devs = factor(NA),
   log_sigma_log_K_devs = factor(NA),
   log_sigma_log_L1_devs = factor(NA),
   log_sigma_log_Linf_hyper_devs = factor(NA),
   log_sigma_log_K_hyper_devs = factor(NA),
-  log_sigma_log_L1_hyper_devs = factor(NA)
-  # theta1 = factor(NA),
-  # theta2 = factor(NA),
-  # theta3 = factor(NA),
-  # theta4 = factor(NA)
-  # theta5 = factor(NA),
-  # theta6 = factor(NA)
+  log_sigma_log_L1_hyper_devs = factor(NA),
+  theta1 = factor(NA),
+  theta2 = factor(NA),
+  theta3 = factor(NA),
+  theta4 = factor(NA)
 )
 
 # list random effects
-RE <- c('log_Linf_devs', 'log_K_devs','log_L1_devs',
-        'log_Linf_hyper_devs', 'log_K_hyper_devs', 'log_L1_hyper_devs', 'log_PE')
+RE <- c("log_PE")
 
 
 # Generate the objective function and gradient
 obj <- MakeADFun(
   data = data,
-  parameters = parameters,
+  parameters = parameters_transient,
   DLL = 'ltSup_MVN_BVN_v2',
   random = RE,
   map = map_par_transient
