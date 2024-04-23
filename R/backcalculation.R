@@ -38,6 +38,50 @@ sma_plot <- idat |>
 
 ggsave(sma_plot, file = here("figures", "sma_plot.png"))
 
+# sma plot by location
+get_sma_plot_points <- function(location_name) {
+  data <- idat |> 
+    filter(Location == location_name)
+  sma <- with(data, line.cis(y = TL_mm, x = M_radius, method = "SMA"))
+  intercept <- sma[1,1]
+  slope <- sma[2,1]
+  return(tibble("sma_intercept" = intercept,
+                "sma_slope" = slope))
+}
+
+sma_plot_points <- purrr:::map_dfr(as.character(unique(idat$Location)), get_sma_plot_points) |> 
+  mutate(Location = as.character(unique(idat$Location)))
+
+sma_plot_by_loc <- idat |> 
+  distinct(id, TL_mm, M_radius, Location) |>
+  left_join(sma_plot_points, by = "Location") |> 
+  ggplot(aes(x = M_radius, y = TL_mm)) +
+  geom_point(alpha = 0.5, size = 2) +
+  geom_abline(aes(intercept = sma_intercept, slope = sma_slope),
+              linewidth = 1, color = top_palette[1]) +
+  facet_wrap(~Location) +
+  labs(x = "Total otolith radius (mm)",
+       y = "Total body length (mm)",
+       title = "Total otolith radius vs. body length (Standardized Major Axis Regression)") +
+  theme_minimal()
+
+ggsave(sma_plot_by_loc, file = here("figures", "sma_plot_by_loc.png"))
+
+
+
+# plot otolith radius on total body length
+otolith_to_body_length_plot <- idat |> 
+  distinct(id, TL_mm, M_radius, Location) |> 
+  ggplot(aes(x = M_radius, y = TL_mm)) +
+  geom_point(alpha = 0.5, size = 2) +
+  facet_wrap(~Location) +
+  labs(x = "Total otolith radius (mm)",
+       y = "Total body length (mm)",
+       title = "Total otolith radius vs. body length (Standardized Major Axis Regression)") +
+  theme_minimal()
+
+ggsave(otolith_to_body_length_plot, file = here("figures", "otolith_to_body_length_plot.png"))
+
 
 # define back-calculation formulas ----------------------------------------
 

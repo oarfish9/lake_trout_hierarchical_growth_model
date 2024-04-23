@@ -16,12 +16,14 @@ short_palette = c("#354823", "#D69C4E")
 pred_vs_observed <- tibble("Age" = rep$age,
                            "BCL_length" = rep$L,
                            "pred_length" = rep$L_hat,
+                           "pred_length_no_PE" = rep$delta + rep$L, # calculate predicted length no PE april 22 2024
                            "log_PE" = rep$log_PE,
                            "year_capture" = idat$year_capture,
                            "idx" = idat$id,
                            "pop_idx" = idat$pop_idx) |> 
   mutate(residuals = (BCL_length - pred_length),
          log_residuals = log(pred_length) - log(BCL_length),
+         residuals_no_PE = (BCL_length - pred_length_no_PE),
          index = row_number())
 
 pred_vs_observed |> 

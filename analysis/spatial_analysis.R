@@ -33,6 +33,8 @@ ind_fish <- idat |>
 residuals = tibble("id" = idat$id,
                    "pop_id" = idat$pop_idx + 1,
                    "residuals" = rep$resid,
+                   "residuals_no_PE" = rep$L - (rep$delta + rep$L),
+                   "log_residuals_no_PE" = log(rep$L) - log(rep$delta + rep$L),
                    "log_residuals" = log(rep$L) - log(rep$L_hat),
                    "age" = idat$Age) |> 
   left_join(fish_ids_with_centroids |> 
@@ -91,6 +93,22 @@ log_resid_plot <- residuals |>
        title = "Log-scale residuals of predicted vs. observed (back-calculated) length by population")
 
 ggsave(log_resid_plot, file = here("figures", "log_resid_plot.png"))
+
+# above plot but using residuals with no process error
+log_resid_plot_no_PE <- residuals |> 
+  rename(Location = location) |> 
+  ggplot(aes(x = age, log_residuals_no_PE, color = Location)) + 
+  geom_point(alpha = 0.5, size = 2) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  #ylim(c(-0.001, 0.001)) +
+  facet_wrap(~Location) +
+  theme(legend.position = "below") +
+  scale_color_manual(values = top_palette) +
+  theme_bw() +
+  labs(x = "Age", y = "Log-scale residuals (mm)",
+       title = "Log-scale residuals of predicted (less process error) vs. observed (back-calculated) length by population")
+
+ggsave(log_resid_plot_no_PE, file = here("figures", "log_resid_plot_no_PE.png"))
 
 residuals |> 
   filter(residuals > -0.01 & residuals <0.01) |> 

@@ -197,3 +197,74 @@ run_cases <- function(obj, obj_env_last_par, case) {
   }
   return(output_data)
 }
+
+
+# function for persistent vs transient simulations (updated methods)
+run_cases_updated_methods <- function(obj, obj_env_last_par, case) {
+  
+  if(length(obj_env_last_par) == 6479) {
+    # fill in persistent error
+    original_pars <- obj_env_last_par[1]
+    fill_in_pers_parameters <- c("log_sigma_log_Linf_devs" = 0,
+                                 "log_sigma_log_K_devs" = 0,
+                                 "log_sigma_log_L1_devs" = 0,
+                                 "log_sigma_log_Linf_hyper_devs" = 0,
+                                 "log_sigma_log_K_hyper_devs" = 0,
+                                 "log_sigma_log_L1_hyper_devs" = 0)
+    original_pars_pt_2 <- c(obj_env_last_par[2:4])
+    fill_in_pers_parameters_2 <- c("theta1" = 0,
+                                   "theta2" = 0,
+                                   "theta3" = 0,
+                                   "theta4" = 0,
+                                   "theta5" = 0,
+                                   "theta6" = 0)
+    original_pars_end <- obj_env_last_par[5:length(obj_env_last_par)]
+    obj_env_last_par <- c(original_pars, fill_in_pers_parameters, original_pars_pt_2,
+                          fill_in_pers_parameters_2, original_pars_end)
+  } 
+  
+  if(length(obj_env_last_par) == 6488) {
+    # fill in transient error and thetas
+    original_pars <- obj_env_last_par[1:14]
+    fill_in_trans_parameters <- c("theta5" = 0,
+                                  "theta6" = 0,
+                                  "log_sigma_PE" = 0)
+    original_pars_end <- obj_env_last_par[15:length(obj_env_last_par)]
+    obj_env_last_par <- c(original_pars, fill_in_trans_parameters, original_pars_end)
+  }
+
+  if(case == 1) {
+    output_data <- simulate_data(obj, obj_env_last_par)
+
+  } else if(case == 2) {
+    par_list_case_2 <- obj_env_last_par
+    par_list_case_2["log_sigma_PE"] <- log(0) # no process error
+    output_data <- simulate_data(obj, par_list_case_2)
+
+  } else if(case == 3) {
+    par_list_case_3 <- obj_env_last_par
+    par_list_case_3["log_sigma_log_Linf_devs"] <- log(0) # no persistent error
+    par_list_case_3["log_sigma_log_K_devs"] <- log(0)
+    par_list_case_3["log_sigma_log_L1_devs"] <- log(0)
+    par_list_case_3["log_sigma_log_Linf_hyper_devs"] <- log(0)
+    par_list_case_3["log_sigma_log_K_hyper_devs"] <- log(0)
+    par_list_case_3["log_sigma_log_L1_hyper_devs"] <- log(0)
+
+    output_data <- simulate_data(obj, par_list_case_3)
+  } else if(case == 4) {
+    par_list_case_4 <- obj_env_last_par
+    par_list_case_4["log_sigma_PE"] <- log(0) # no process error
+    par_list_case_4["log_sigma_log_Linf_devs"] <- log(0) # no persistent error
+    par_list_case_4["log_sigma_log_K_devs"] <- log(0)
+    par_list_case_4["log_sigma_log_L1_devs"] <- log(0)
+    par_list_case_4["log_sigma_log_Linf_hyper_devs"] <- log(0)
+    par_list_case_4["log_sigma_log_K_hyper_devs"] <- log(0)
+    par_list_case_4["log_sigma_log_L1_hyper_devs"] <- log(0)
+
+    output_data <- simulate_data(obj, par_list_case_4)
+
+  } else {
+    error("provide a value for case that is either 1, 2, 3, or 4")
+  }
+  return(output_data)
+}
