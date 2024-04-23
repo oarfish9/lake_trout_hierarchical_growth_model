@@ -163,18 +163,18 @@ obj <- create_MVNMVN_obj(idat, sim_vectors)$obj
 
 # simulate data for all three cases using persistent error only
 pers_case_1 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 1) |> mutate(case = 1) 
-pers_case_2 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 2) |> mutate(case = 1) 
-pers_case_3 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 3) |> mutate(case = 1) 
-pers_case_4 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 4) |> mutate(case = 1) 
+pers_case_2 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 2) |> mutate(case = 2) 
+pers_case_3 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 3) |> mutate(case = 3) 
+pers_case_4 <- run_cases_updated_methods(obj, point_estimates_no_transient$obj_env_last_par, 4) |> mutate(case = 4) 
 
 no_transient_sim_cases <- bind_rows(pers_case_1, pers_case_2, pers_case_3, pers_case_4) 
 save(no_transient_sim_cases, file = here("data", "persistent_transient_sim_results_no_transient.Rdata"))
 
 # simulate data for all three cases using transient error only
 trans_case_1 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 1) |> mutate(case = 1) 
-trans_case_2 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 2) |> mutate(case = 1) 
-trans_case_3 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 3) |> mutate(case = 1) 
-trans_case_4 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 4) |> mutate(case = 1) 
+trans_case_2 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 2) |> mutate(case = 2) 
+trans_case_3 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 3) |> mutate(case = 3) 
+trans_case_4 <- run_cases_updated_methods(obj, point_estimates_no_persistent$obj_env_last_par, 4) |> mutate(case = 4) 
 
 no_persistent_sim_cases <- bind_rows(trans_case_1, trans_case_2, trans_case_3, trans_case_4) 
 save(no_persistent_sim_cases, file = here("data", "persistent_transient_sim_results_no_persistent.Rdata"))
@@ -182,6 +182,74 @@ save(no_persistent_sim_cases, file = here("data", "persistent_transient_sim_resu
 # compare to the simulated data for all three cases using full obj_env_last_par (both error)
 load(here("data", "persistent_transient_sim_results.Rdata"))
 
+# bind into one DF with column "source point estimates" 
+
+all_persistent_transient_datasets <- bind_rows(no_persistent_sim_cases |> 
+                                                 mutate(estimation_scenario = "no_persistent"),
+                                               no_transient_sim_cases |> 
+                                                 mutate(estimation_scenario = "no_transient"),
+                                               all_cases |> 
+                                                 mutate(estimation_scenario = "both",
+                                                        case = as.numeric(case)))
+
+# plots
+top_palette <- c("#1B0C42FF", "#FB9A06FF", "#781C6DFF","#CF4446FF", "#4B0C6BFF", "#ED6925FF", 
+                 "#FCFFA4FF", "#000004FF", "#F7D03CFF", "#A52C60FF")
+no_transient_sim_cases_plot <- no_transient_sim_cases |> 
+  mutate(case = as.character(case)) |> 
+  filter(age %in% c(4, 15, 40),
+         sim_length < 2e05,
+         case != "4") |> 
+  mutate(case = case_when(case == "1" ~ "Per + Trans",
+                          case == "2" ~ "Per",
+                          case == "3" ~ "Trans",
+                          TRUE ~ case),
+         age_title = paste0("Age = ", age),
+         age_title_f = factor(age_title, levels = c("Age = 4", "Age = 15", "Age = 40"))) |> 
+  ggplot(aes(x = sim_length, color = case)) + 
+  geom_density(size = 1.2) +
+  facet_wrap(~age_title_f, nrow = 3, scales = "free") +
+  scale_color_manual(values = top_palette) + 
+  #theme_minimal() +
+  theme_bw() +
+  labs(x = "Simulated True Length",
+       y = "Density",
+       title = "Density plot of simulated true lengths using estimates from a model fit with no transient error") +
+  labs(color = "Case")
+
+ggsave(no_transient_sim_cases_plot, file = here("figures", "no_transient_sim_cases_plot.png"))
+
+no_persistent_sim_cases_plot <- no_persistent_sim_cases |> 
+  mutate(case = as.character(case)) |> 
+  filter(age %in% c(4, 15, 40),
+         sim_length < 1000,
+         case != "4") |> 
+  mutate(case = case_when(case == "1" ~ "Per + Trans",
+                          case == "2" ~ "Per",
+                          case == "3" ~ "Trans",
+                          TRUE ~ case),
+         age_title = paste0("Age = ", age),
+         age_title_f = factor(age_title, levels = c("Age = 4", "Age = 15", "Age = 40"))) |> 
+  ggplot(aes(x = sim_length, color = case)) + 
+  geom_density(size = 1.2) +
+  facet_wrap(~age_title_f, nrow = 3, scales = "free") +
+  scale_color_manual(values = top_palette) + 
+  #theme_minimal() +
+  theme_bw() +
+  labs(x = "Simulated True Length",
+       y = "Density",
+       title = "Density plot of simulated true lengths using estimates from a model fit with no persistent error") +
+  labs(color = "Case")
+
+ggsave(no_persistent_sim_cases_plot, file = here("figures", "no_persistent_sim_cases_plot.png"))
+
 # compare AIC
+
+AIC_comparison_table_sims <- tibble("model_description" = c("all error", 
+                                                            "no transient error",
+                                                            "no persistent error"),
+                                    "AIC" = c(NA,
+                                              point_estimates_no_transient$AIC,
+                                              point_estimates_no_persistent$AIC))
 
 
