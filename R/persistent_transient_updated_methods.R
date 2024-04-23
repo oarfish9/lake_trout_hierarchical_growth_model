@@ -245,10 +245,17 @@ ggsave(no_persistent_sim_cases_plot, file = here("figures", "no_persistent_sim_c
 
 # compare AIC
 
+load(here("data", "AIC_table.Rdata"))
+
+best_AIC <- AIC_table |> 
+  filter(convergence == "YES") |> 
+  slice_min(AIC) |> 
+  pull(AIC)
+
 AIC_comparison_table_sims <- tibble("model_description" = c("all error", 
                                                             "no transient error",
                                                             "no persistent error"),
-                                    "AIC" = c(NA,
+                                    "AIC" = c(best_AIC,
                                               point_estimates_no_transient$AIC,
                                               point_estimates_no_persistent$AIC))
 
