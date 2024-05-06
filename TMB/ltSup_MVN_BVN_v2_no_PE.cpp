@@ -56,10 +56,11 @@ Type objective_function<Type>::operator() ()
   vector<Type> log_resid(nrec); 
   vector<Type> delta(nrec); // store increments
 
-  vector<Type> L_hat_tmp_no_PE(nrec);
+  //vector<Type> L_hat_tmp_no_PE(nrec);
+  vector<Type> log_resid_no_PE(nrec);
   vector<Type> L_hat_no_PE(nrec);
-  Type w2_no_PE = 0;
-  Type w1_no_PE = 0;
+  //Type w2_no_PE = 0;
+  //Type w1_no_PE = 0;
 
   
   // add in individual- and population-level deviations to the hyper-population mean for each
@@ -84,10 +85,11 @@ Type objective_function<Type>::operator() ()
       delta(i-1) = (Linf_pop(ind_idx(i)) - L_hat(i-1)) * (1-exp(-K_pop(ind_idx(i))));
       L_hat_tmp(i) = L_hat(i-1) + (delta(i-1) * PE(i));
 
-      L_hat_tmp_no_PE(i) = L_hat_no_PE(i-1) + delta(i-1);
-      w2_no_PE = 1/(1+exp(-alpha*((0.99*Linf_pop(ind_idx(i))) - L_hat_tmp_no_PE(i))));
-      w1_no_PE = 1 - w2_no_PE;
-      L_hat_no_PE(i) = (w2_no_PE * L_hat_tmp_no_PE(i)) + (w1_no_PE * Linf_pop(ind_idx(i)));
+      //L_hat_tmp_no_PE(i) = L_hat_no_PE(i-1) + delta(i-1);
+      L_hat_no_PE(i) = L_hat_no_PE(i-1) + delta(i-1);
+      //w2_no_PE = 1/(1+exp(-alpha*((0.99*Linf_pop(ind_idx(i))) - L_hat_tmp_no_PE(i))));
+      //w1_no_PE = 1 - w2_no_PE;
+      //L_hat_no_PE(i) = (w2_no_PE * L_hat_tmp_no_PE(i)) + (w1_no_PE * Linf_pop(ind_idx(i)));
 
       // set the weights for logistic smoothing function, based on distance
       // from Linf (for that individual) and the calculated L_hat (for this time step)
@@ -102,6 +104,7 @@ Type objective_function<Type>::operator() ()
   // Calculate residuals
   resid = L - L_hat;
   log_resid = log(L) - log(L_hat);
+  log_resid_no_PE = log(L) - log(L_hat_no_PE);
   
   // backtransform sd parameters for individual growth parameters
   Type sigma_log_Linf_devs = exp(log_sigma_log_Linf_devs);
@@ -225,6 +228,7 @@ Type objective_function<Type>::operator() ()
   REPORT(log_L1_hyper_devs);
   REPORT(log_PE);
   REPORT(L_hat_no_PE);
+  REPORT(log_resid_no_PE);
 
 
   

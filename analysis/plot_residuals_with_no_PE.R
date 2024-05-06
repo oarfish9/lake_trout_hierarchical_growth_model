@@ -4,6 +4,7 @@
 
 # libraries
 library(tidyverse)
+library(here)
 library(TMB)
 
 # helper functions
@@ -103,17 +104,21 @@ load(here("data", "fish_ids_with_centroids.Rdata"))
 residuals <- tibble("id" = idat$id,
                    "pop_id" = idat$pop_idx + 1,
                    "residuals" = rep$resid,
-                   "log_residuals_no_PE" = log(rep$L) - log(rep$L_hat_no_PE),
-                   # "log_residuals_no_PE" = log(rep$L) - log(rep$delta + rep$L),
+                   "log_PE" = log(rep$PE),
+                   "log_residuals_no_PE" = rep$log_resid_no_PE,
+                   # "log_residuals_no_PE" = log(rep$L) - log(rep$L_hat_no_PE),
                    "log_residuals" = log(rep$L) - log(rep$L_hat),
                    "age" = idat$Age) |> 
   left_join(fish_ids_with_centroids |> 
               select(id, location))
 
 # plot
+top_palette <- c("#1B0C42FF", "#FB9A06FF", "#781C6DFF","#CF4446FF", "#4B0C6BFF", "#ED6925FF", 
+                 "#FCFFA4FF", "#000004FF", "#F7D03CFF", "#A52C60FF")
+
 log_resid_plot_no_PE <- residuals |> 
   rename(Location = location) |> 
-  ggplot(aes(x = age, log_residuals_no_PE, color = Location)) + 
+  ggplot(aes(x = age, residuals, color = Location)) + 
   geom_point(alpha = 0.5, size = 2) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   #ylim(c(-0.001, 0.001)) +
@@ -121,7 +126,7 @@ log_resid_plot_no_PE <- residuals |>
   theme(legend.position = "below") +
   scale_color_manual(values = top_palette) +
   theme_bw() +
-  labs(x = "Age", y = "Log-scale residuals (mm)",
+  labs(x = "Age", y = "Log-scale residuals",
        title = "Log-scale residuals of predicted (less process error) vs. observed (back-calculated) length by population")
 
 ggsave(log_resid_plot_no_PE, file = here("figures", "log_resid_plot_no_PE.png"))
