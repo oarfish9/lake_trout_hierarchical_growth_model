@@ -200,9 +200,11 @@ run_cases <- function(obj, obj_env_last_par, case) {
 
 
 # function for persistent vs transient simulations (updated methods)
-run_cases_updated_methods <- function(obj, obj_env_last_par, case) {
+# run_cases_updated_methods <- function(obj, obj_env_last_par, case) {
+run_cases_updated_methods <- function(obj, obj_env_last_par) {
   
-  if(length(obj_env_last_par) == 6479) {
+  # using obj_env_last_par from when fit with no persistent error
+  if(length(obj_env_last_par) == 5231) {
     # fill in persistent error
     original_pars <- obj_env_last_par[1]
     fill_in_pers_parameters <- c("log_sigma_log_Linf_devs" = 0,
@@ -218,30 +220,20 @@ run_cases_updated_methods <- function(obj, obj_env_last_par, case) {
                                    "theta4" = 0,
                                    "theta5" = 0,
                                    "theta6" = 0)
-    original_pars_end <- obj_env_last_par[5:length(obj_env_last_par)]
+    original_pars_middle <- obj_env_last_par[5] # log_sigma_PE
+    fill_in_pers_parameters_3 <- rep(0, (410 * 3) + (3 * 6))
+    names(fill_in_pers_parameters_3) <- c(rep("log_Linf_devs", 410),
+                                         rep("log_K_devs", 410),
+                                         rep("log_L1_devs", 410),
+                                         rep("log_Linf_hyper_devs", 6),
+                                         rep("log_K_hyper_devs", 6),
+                                         rep("log_L1_hyper_devs", 6))
+    original_pars_end <- obj_env_last_par[6:length(obj_env_last_par)]
     obj_env_last_par <- c(original_pars, fill_in_pers_parameters, original_pars_pt_2,
-                          fill_in_pers_parameters_2, original_pars_end)
-  } 
-  
-  if(length(obj_env_last_par) == 6488) {
-    # fill in transient error and thetas
-    original_pars <- obj_env_last_par[1:14]
-    fill_in_trans_parameters <- c("theta5" = 0,
-                                  "theta6" = 0,
-                                  "log_sigma_PE" = 0)
-    original_pars_end <- obj_env_last_par[15:length(obj_env_last_par)]
-    obj_env_last_par <- c(original_pars, fill_in_trans_parameters, original_pars_end)
-  }
-
-  if(case == 1) {
-    output_data <- simulate_data(obj, obj_env_last_par)
-
-  } else if(case == 2) {
-    par_list_case_2 <- obj_env_last_par
-    par_list_case_2["log_sigma_PE"] <- log(0) # no process error
-    output_data <- simulate_data(obj, par_list_case_2)
-
-  } else if(case == 3) {
+                          fill_in_pers_parameters_2, original_pars_middle,
+                          fill_in_pers_parameters_3, original_pars_end)
+    
+    # simulate data
     par_list_case_3 <- obj_env_last_par
     par_list_case_3["log_sigma_log_Linf_devs"] <- log(0) # no persistent error
     par_list_case_3["log_sigma_log_K_devs"] <- log(0)
@@ -249,22 +241,30 @@ run_cases_updated_methods <- function(obj, obj_env_last_par, case) {
     par_list_case_3["log_sigma_log_Linf_hyper_devs"] <- log(0)
     par_list_case_3["log_sigma_log_K_hyper_devs"] <- log(0)
     par_list_case_3["log_sigma_log_L1_hyper_devs"] <- log(0)
-
+    
     output_data <- simulate_data(obj, par_list_case_3)
-  } else if(case == 4) {
-    par_list_case_4 <- obj_env_last_par
-    par_list_case_4["log_sigma_PE"] <- log(0) # no process error
-    par_list_case_4["log_sigma_log_Linf_devs"] <- log(0) # no persistent error
-    par_list_case_4["log_sigma_log_K_devs"] <- log(0)
-    par_list_case_4["log_sigma_log_L1_devs"] <- log(0)
-    par_list_case_4["log_sigma_log_Linf_hyper_devs"] <- log(0)
-    par_list_case_4["log_sigma_log_K_hyper_devs"] <- log(0)
-    par_list_case_4["log_sigma_log_L1_hyper_devs"] <- log(0)
-
-    output_data <- simulate_data(obj, par_list_case_4)
-
-  } else {
-    error("provide a value for case that is either 1, 2, 3, or 4")
+    
+  } 
+  
+  # using obj_env_last_par from when fit with no transient error
+  if(length(obj_env_last_par) == 1262) {
+    # fill in transient error and thetas
+    original_pars <- obj_env_last_par[1:14]
+    fill_in_trans_parameters <- c("theta5" = 0,
+                                  "theta6" = 0,
+                                  "log_sigma_PE" = 0)
+    original_pars_end <- obj_env_last_par[15:length(obj_env_last_par)]
+    fill_in_trans_parameters_2 <- rep(0, 5226)
+    names(fill_in_trans_parameters_2) <- rep("log_PE", 5226)
+    obj_env_last_par <- c(original_pars, fill_in_trans_parameters, original_pars_end,
+                          fill_in_trans_parameters_2)
+    
+    # simulate data
+    par_list_case_2 <- obj_env_last_par
+    par_list_case_2["log_sigma_PE"] <- log(0) # no process error
+    output_data <- simulate_data(obj, par_list_case_2)
+    
   }
+
   return(output_data)
 }
