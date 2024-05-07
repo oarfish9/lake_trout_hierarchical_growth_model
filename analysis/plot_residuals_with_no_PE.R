@@ -105,8 +105,11 @@ residuals <- tibble("id" = idat$id,
                    "pop_id" = idat$pop_idx + 1,
                    "residuals" = rep$resid,
                    "log_PE" = log(rep$PE),
+                   "pred_L_no_PE" = rep$L_hat_no_PE,
+                   "delta" = rep$delta,
+                   "pred_L_w_PE" = rep$L_hat,
                    "log_residuals_no_PE" = rep$log_resid_no_PE,
-                   # "log_residuals_no_PE" = log(rep$L) - log(rep$L_hat_no_PE),
+                   #"log_residuals_no_PE" = log(rep$L) - log(rep$L_hat_no_PE),
                    "log_residuals" = log(rep$L) - log(rep$L_hat),
                    "age" = idat$Age) |> 
   left_join(fish_ids_with_centroids |> 
@@ -118,16 +121,76 @@ top_palette <- c("#1B0C42FF", "#FB9A06FF", "#781C6DFF","#CF4446FF", "#4B0C6BFF",
 
 log_resid_plot_no_PE <- residuals |> 
   rename(Location = location) |> 
-  ggplot(aes(x = age, residuals, color = Location)) + 
+  ggplot(aes(x = age, log_residuals_no_PE, color = Location)) + 
   geom_point(alpha = 0.5, size = 2) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  #ylim(c(-0.001, 0.001)) +
   facet_wrap(~Location) +
-  theme(legend.position = "below") +
+  theme(legend.position = "bottom") +
   scale_color_manual(values = top_palette) +
   theme_bw() +
   labs(x = "Age", y = "Log-scale residuals",
        title = "Log-scale residuals of predicted (less process error) vs. observed (back-calculated) length by population")
 
 ggsave(log_resid_plot_no_PE, file = here("figures", "log_resid_plot_no_PE.png"))
+
+PE_by_age_plot <- residuals |> 
+  rename(Location = location) |> 
+  ggplot(aes(x = age, log_PE, color = Location)) + 
+  geom_point(alpha = 0.6, size = 2) +
+  facet_wrap(~Location) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "Age",
+       y = "Estimated log-scale process errors")
+
+ggsave(PE_by_age_plot, file = here("figures", "PE_by_age_plot.png"))
+
+diff_between_methods <- residuals |> 
+  mutate(diff_between_methods = pred_L_w_PE - pred_L_no_PE) |> 
+  rename(Location = location) |> 
+  ggplot(aes(x = age, diff_between_methods, color = Location)) + 
+  geom_point(alpha = 0.8, size = 2) +
+  facet_wrap(~Location) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "Age",
+       y = "Difference (mm)")
+
+ggsave(diff_between_methods, file = here("figures", "diff_between_methods.png"))
+  
+
+pred_L_by_PE_plot <- residuals |> 
+  rename(Location = location) |> 
+  pivot_longer(c(pred_L_no_PE, pred_L_w_PE),
+                 names_to = "Method",
+                 values_to = "pred_L") |> 
+  mutate(Method = ifelse(Method == "pred_L_no_PE", 
+                         "Predicted length (no process error)",
+                         "Predicted length (with process error)")) |> 
+  mutate(group_id = paste(id, Method, sep = "_")) |> 
+  ggplot(aes(x = age, pred_L, group = group_id, color = Method)) + 
+  geom_line(alpha = 0.8, linewidth = 0.8) +
+  scale_color_manual(values = top_palette[2:3]) +
+  facet_wrap(~Location, scales = "free") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  labs(x = "Age",
+       y = "Predicted length (mm)")
+
+ggsave(pred_L_by_PE_plot, file = here("figures", "pred_L_by_PE_plot.png"))
+
+pred_delta <- residuals |> 
+  rename(Location = location) |> 
+  # ggplot(aes(x = delta, fill = Location)) +
+  # geom_histogram() +
+  ggplot(aes(x = age, y = delta, color = Location)) +
+  geom_point(alpha = 0.8, size = 2) +
+  facet_wrap(~Location, scales = "free") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  labs(x = "Age",
+       y = "Predicted length increment (delta)") +
+  scale_color_manual(values = top_palette)
+
+ggsave(pred_delta, file = here("figures", "pred_delta.png"))
 

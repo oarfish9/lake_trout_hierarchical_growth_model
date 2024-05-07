@@ -85,11 +85,7 @@ Type objective_function<Type>::operator() ()
       delta(i-1) = (Linf_pop(ind_idx(i)) - L_hat(i-1)) * (1-exp(-K_pop(ind_idx(i))));
       L_hat_tmp(i) = L_hat(i-1) + (delta(i-1) * PE(i));
 
-      //L_hat_tmp_no_PE(i) = L_hat_no_PE(i-1) + delta(i-1);
       L_hat_no_PE(i) = L_hat_no_PE(i-1) + delta(i-1);
-      //w2_no_PE = 1/(1+exp(-alpha*((0.99*Linf_pop(ind_idx(i))) - L_hat_tmp_no_PE(i))));
-      //w1_no_PE = 1 - w2_no_PE;
-      //L_hat_no_PE(i) = (w2_no_PE * L_hat_tmp_no_PE(i)) + (w1_no_PE * Linf_pop(ind_idx(i)));
 
       // set the weights for logistic smoothing function, based on distance
       // from Linf (for that individual) and the calculated L_hat (for this time step)
